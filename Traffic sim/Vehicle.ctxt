@@ -1,0 +1,11 @@
+#BlueJ class context
+comment0.target=Vehicle
+comment1.params=type\ size\ speed\ accel\ position\ currRoad\ destRoad\ laneNum
+comment1.target=Vehicle(java.lang.String,\ double,\ double,\ double,\ double,\ Road,\ Road,\ int)
+comment2.params=
+comment2.target=void\ tick()
+comment3.params=
+comment3.target=void\ move()
+comment4.params=
+comment4.target=void\ accelerate()
+numComments=5
