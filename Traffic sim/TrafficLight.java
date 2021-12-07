@@ -4,10 +4,11 @@ public class TrafficLight{
     double x;
     double y;
     int light;
-    Queue<Integer> pattern = new LinkedList<>();
-    int currPattern;
-    int counter = 0;
+    Signal[] pattern = new Signal[4];
+    int currPattern = 0;
+    int counter;
     int max;
+    int i;
     static ArrayList<TrafficLight> lights = new ArrayList<TrafficLight>();
     
     public TrafficLight(double x, double y){
@@ -15,18 +16,32 @@ public class TrafficLight{
        this.y = y;
        lights.add(this);
        
-       //temp
-       currPattern = 0;
+       for(i = 0; i < 4; ++i){
+        pattern[i] = new Signal();
+       }
+       pattern[currPattern].through = 2;
+       pattern[currPattern + 2].through = 2;
+       counter = 60;
     }
-
-    /* Light Pattern chart
-     * 0 = all red
-     * 
-     * 
-     */
     
     public static void tick(){
-        
+        for(TrafficLight light : lights){
+            light.next();
+        }
     }
     
+    public void next(){
+        if(counter == 0){
+            pattern[currPattern].through = 0;
+            pattern[Math.floorMod(currPattern + 2, 4)].through = 0;
+            currPattern = Math.floorMod(currPattern + 1, 4);
+            //System.out.println(currPattern);
+            pattern[currPattern].through = 2;
+            pattern[Math.floorMod(currPattern + 2, 4)].through = 2;
+            counter = 60;
+        }
+        else{
+            counter--;
+        }
+    }
 }

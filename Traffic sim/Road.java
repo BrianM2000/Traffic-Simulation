@@ -20,7 +20,7 @@ public class Road{
         this.endX = endX;
         this.endY = endY;
         this.speedLimit = speedLimit;
-        this.federalDirection = federalDirection; //1 North 3 East 5 South 7 West
+        this.federalDirection = federalDirection; //1 North 3 East 5 South 7 West //mod8
         this.length = length * 0.000621371;
         this.oneway = oneway;
         this.perfDelay = Math.round(this.length/((this.speedLimit*1.0/3600)*1.0));

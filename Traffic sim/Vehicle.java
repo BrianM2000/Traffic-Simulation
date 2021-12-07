@@ -14,6 +14,7 @@ public class Vehicle{
     boolean mustCheckNeighbor = true;
     Vehicle neighbor = null;
     boolean toClose;
+    int toTurn; //6 turns right, 2 turns left, 0 through, else cannot turn
     
     public Vehicle(String type, double size, double speed, double accel, double position, Road currRoad, Road destRoad, int laneNum){  
         this.type = type;
@@ -24,11 +25,11 @@ public class Vehicle{
         this.currRoad = currRoad;
         this.destRoad = destRoad;
         this.laneNum = laneNum;
-        
+        this.toTurn = Math.floorMod(this.currRoad.federalDirection - this.destRoad.federalDirection, 8);
         this.currRoad.addVehicleToLane(this, laneNum);
         
         if(vehicles.add(this)){ 
-            System.out.println(this + " " + type + " added at position " + (position - this.size));
+            System.out.println(this + " " + type + " added at position " + (position - this.size) + " " + toTurn);
         }
     }
     
@@ -45,6 +46,7 @@ public class Vehicle{
         if(this.speed/3600 < 0){
             this.speed = 0;
         }
+        
         if(type == "Motercycle"){
             System.out.println(type + " " + this.speed + " mph " + position);
         }
@@ -68,27 +70,47 @@ public class Vehicle{
                       (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
         }
         if(neighbor != null && toClose && speed >= 0){
-            //System.out.println((neighbor.position - neighbor.size) - position + 1);
             this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 400 + 1);
         }
         
-        else if((this.currRoad.length - 0.00284091) < (position + (speed/3600) * 3) ||
-            (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position &&
-            this.currRoad.intersection.light.currPattern == 0){
-            this.accel = -this.speed/(((this.currRoad.length - 0.00284091) - position) * 400 + 1);
+        else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
+            (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
+            !this.canGoThroughLight()){
+            this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 400 + 1);
             //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
         }
         
         else{
             this.accel = (this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit);
         }
-        
+        /*
+        if(this.canGoThroughLight()){
+            System.out.println(type + " is going " + toTurn + " at light " + this.currRoad.intersection.light);
+        }
+        */
         //System.out.println("accel " + this.accel);
         /*
         if(type == "Truck"){
             accel = 0;
         }
         */
-        this.speed = Math.round((this.speed + this.accel)*1000.0)/1000.0;
+        this.speed = Math.ceil((this.speed + this.accel)*1000.0)/1000.0;
+    }
+    
+    public boolean canGoThroughLight(){
+        boolean correctLane;
+        if(this.toTurn == 0){
+            correctLane = this.currRoad.lanes.get(laneNum).through;
+        }
+        else if(this.toTurn == 2){
+            correctLane = this.currRoad.lanes.get(laneNum).left;
+        }
+        else if(this.toTurn == 6){
+            correctLane = this.currRoad.lanes.get(laneNum).right;
+        }
+        else{
+            correctLane = false;
+        }
+        return this.currRoad.intersection.light.pattern[(this.currRoad.federalDirection/2)].getTurn(toTurn) && correctLane;
     }
 }
