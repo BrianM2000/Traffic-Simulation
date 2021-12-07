@@ -4,5 +4,5 @@ comment1.params=x\ y
 comment1.target=TrafficLight(double,\ double)
 comment2.params=
 comment2.target=void\ tick()
-comment2.text=\ Light\ Pattern\ chart\r\n\ 0\ \=\ green\ north/south\r\n\ 1\ \=\ green\ east/west\r\n\ nums\ <\ 45\ are\ how\ long\ a\ light\ stays\r\n
+comment2.text=\ Light\ Pattern\ chart\r\n\ 0\ \=\ all\ red\r\n\ \r\n\ \r\n
 numComments=3

@@ -8,4 +8,9 @@ public class Intersection{
         this.light = light;
     }
 
+    public void addToRoads(){
+        for(Road road : roads){
+            road.intersection = this;
+        }
+    }
 }

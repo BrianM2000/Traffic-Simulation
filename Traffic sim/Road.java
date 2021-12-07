@@ -11,6 +11,8 @@ public class Road{
     double length;
     boolean oneway;
     ArrayList<Lane> lanes = new ArrayList<Lane>();
+    double perfDelay;
+    Intersection intersection;
     
     public Road(double startX, double startY, double endX, double endY, int speedLimit, int federalDirection, double length, boolean oneway){
         this.startX = startX;
@@ -18,11 +20,12 @@ public class Road{
         this.endX = endX;
         this.endY = endY;
         this.speedLimit = speedLimit;
-        this.federalDirection = federalDirection;
+        this.federalDirection = federalDirection; //1 North 3 East 5 South 7 West
         this.length = length * 0.000621371;
         this.oneway = oneway;
+        this.perfDelay = Math.round(this.length/((this.speedLimit*1.0/3600)*1.0));
         
-        System.out.println(this.length);
+        System.out.println(this.length + " " + perfDelay);
     }
     
     public void addLane(Lane lane){
