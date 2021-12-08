@@ -14,6 +14,7 @@ public class Vehicle{
     boolean mustCheckNeighbor = true;
     Vehicle neighbor = null;
     boolean toClose;
+    boolean tester = true;
     int toTurn; //6 turns right, 2 turns left, 0 through, else cannot turn
     
     public Vehicle(String type, double size, double speed, double accel, double position, Road currRoad, Road destRoad, int laneNum){  
@@ -46,15 +47,16 @@ public class Vehicle{
         if(this.speed/3600 < 0){
             this.speed = 0;
         }
-        
-        if(type == "Motercycle"){
+        /*
+        if(type == "Car"){
             System.out.println(type + " " + this.speed + " mph " + position);
         }
-        
+        */
         this.position = this.position + this.speed/3600;
         //System.out.println(this.position);
-        if(0 < this.position - this.currRoad.length){
+        if(0 < this.position - this.currRoad.length && tester){
             System.out.println(this + " " + type + " has exited " + this.currRoad + " at " + count + " seconds!");
+            tester = false;
         }
     }
     
@@ -70,13 +72,13 @@ public class Vehicle{
                       (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
         }
         if(neighbor != null && toClose && speed >= 0){
-            this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 400 + 1);
+            this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 50 + 1);
         }
         
         else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
             (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
             !this.canGoThroughLight()){
-            this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 400 + 1);
+            this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 50 + 1);
             //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
         }
         

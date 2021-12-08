@@ -5,7 +5,7 @@ public class TrafficSim{
     public static void main(String args[]){
         generate();
         
-        while(count < 70){
+        while(count < 100){
             tick();
         }
         System.out.println("done!");
@@ -25,8 +25,8 @@ public class TrafficSim{
         TrafficLight BroadwayCedarSt = new TrafficLight(-74.01284, 40.70971);
         
         Intersection bc = new Intersection(BroadwayCedarSt);
-        bc.roads.add(CedarStW);
-        bc.roads.add(Broadway);
+        bc.inRoads.add(CedarStW);
+        bc.inRoads.add(Broadway);
         bc.addToRoads();
         
         Vehicle car1 = new Vehicle("Car",15, 25, 0, 0, CedarStW, Broadway, 0);
