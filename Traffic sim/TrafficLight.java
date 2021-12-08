@@ -1,9 +1,8 @@
 import java.util.*;
 
-public class TrafficLight{
+public class TrafficLight{//should probably merge this with intersection
     double x;
     double y;
-    int light;
     Signal[] pattern = new Signal[4];
     int currPattern = 0;
     int counter;
@@ -11,12 +10,12 @@ public class TrafficLight{
     int i;
     static ArrayList<TrafficLight> lights = new ArrayList<TrafficLight>();
     
-    public TrafficLight(double x, double y){
+    public TrafficLight(double x, double y){// eventually needs an ArrayList or something to store a sequence for the pattern
        this.x = x;
        this.y = y;
        lights.add(this);
        
-       for(i = 0; i < 4; ++i){
+       for(i = 0; i < 4; ++i){ //0 north, 1 east, 2 south, 3 west
         pattern[i] = new Signal();
        }
        pattern[currPattern].through = 2;

@@ -8,14 +8,14 @@ public class TrafficSim{
         while(count < 100){
             tick();
         }
-        System.out.println("done!");
+        System.out.println("done! " + count + " seconds elapsed");
     }
     
     public static void generate(){ //blank args for now, will read info from xlsx in future
         //temp pre created generation
-        Road CedarStW = new Road(-74.00983, 40.70812, -74.01284, 40.70971, 25, 7, 311.03021, true);
-        Road CedarStE = new Road(-74.00983, 40.70812, -74.01284, 40.70971, 25, 3, 311.03021, true);
-        Road Broadway = new Road(-74.01052, 40.70914, -74.01284, 40.70971, 25, 1, 431.6389, true);
+        Road CedarStW = new Road(-74.00983, 40.70812, -74.01284, 40.70971, 25, 7, 311.03021);
+        Road CedarStE = new Road(-74.01284, 40.70971, -74.00983, 40.70812, 25, 3, 311.03021);
+        Road Broadway = new Road(-74.01052, 40.70914, -74.01284, 40.70971, 25, 1, 431.6389);
         
         CedarStW.addLane(new Lane(true, true, false));
         CedarStE.addLane(new Lane(true, true, true));
@@ -27,10 +27,13 @@ public class TrafficSim{
         Intersection bc = new Intersection(BroadwayCedarSt);
         bc.inRoads.add(CedarStW);
         bc.inRoads.add(Broadway);
+        
+        bc.outRoads.add(CedarStE);
+        
         bc.addToRoads();
         
         Vehicle car1 = new Vehicle("Car",15, 25, 0, 0, CedarStW, Broadway, 0);
-        Vehicle car2 = new Vehicle("Motercycle",10, 0, 0, .06, CedarStW, CedarStW, 0);
+        Vehicle car2 = new Vehicle("Motorcycle",10, 0, 0, .06, CedarStW, CedarStW, 0);
         Vehicle car3 = new Vehicle("Truck",72, 0, 10, 0.2, Broadway, CedarStE, 1);
         
     }

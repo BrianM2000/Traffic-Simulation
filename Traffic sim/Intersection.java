@@ -13,5 +13,8 @@ public class Intersection{
         for(Road road : inRoads){
             road.intersection = this;
         }
+        for(Road road : outRoads){
+            road.intersection = this;
+        }
     }
 }
