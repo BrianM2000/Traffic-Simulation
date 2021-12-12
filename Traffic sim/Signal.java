@@ -8,12 +8,15 @@ public class Signal{
         
     }
     
-    public boolean getTurn(int i){
+    public int getTurn(int i){
         if(i == 2){
-            return left == 2;
+            if(left == 0){
+                return through;
+            }
+            return left;
         }
         else{
-            return through == 2;
+            return through;
         }
     }
 }

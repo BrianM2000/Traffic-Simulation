@@ -47,6 +47,13 @@ public class Vehicle{
         if(this.speed/3600 < 0){
             this.speed = 0;
         }
+        if(this.position > this.currRoad.length){
+            this.currRoad.removeVehicleToLane(this, laneNum);
+            this.position = this.position - this.currRoad.length;
+            this.currRoad = this.destRoad;
+            this.currRoad.addVehicleToLane(this, laneNum);
+            this.destRoad = this.currRoad; //should eventaully be this.destRoad = this.getNextDest();
+        }
         /*
         if(type == "Car"){
             System.out.println(type + " " + this.speed + " mph " + position);
@@ -77,7 +84,7 @@ public class Vehicle{
         
         else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
             (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
-            !this.canGoThroughLight()){
+            !this.canGoThroughLight()){// make it so vehicles can go through yellow lights only if their position in the next 3 seconds is greater than the white line
             this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 50 + 1);
             //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
         }
@@ -101,11 +108,26 @@ public class Vehicle{
     
     public boolean canGoThroughLight(){
         boolean correctLane;
+        boolean traffic = false;
+        int i;
         if(this.toTurn == 0){
             correctLane = this.currRoad.lanes.get(laneNum).through;
         }
         else if(this.toTurn == 2){
-            correctLane = this.currRoad.lanes.get(laneNum).left;
+            for(Road road : this.currRoad.intersection.inRoads){
+                if(Math.floorMod(this.currRoad.federalDirection - road.federalDirection, 8) == 4){
+                    for(i = road.lanes.size() - 1; i >= 0; --i){
+                        if(road.lanes.get(i).through){
+                            for(Vehicle vehicle : road.lanes.get(i).vehicles){
+                                if(vehicle.position + (vehicle.speed/3600) * 3 > vehicle.currRoad.length - 0.00284091){
+                                    traffic = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            correctLane = this.currRoad.lanes.get(laneNum).left && !traffic;
         }
         else if(this.toTurn == 6){
             correctLane = this.currRoad.lanes.get(laneNum).right;
@@ -113,6 +135,6 @@ public class Vehicle{
         else{
             correctLane = false;
         }
-        return this.currRoad.intersection.light.pattern[(this.currRoad.federalDirection/2)].getTurn(toTurn) && correctLane;
+        return (this.currRoad.intersection.pattern[(this.currRoad.federalDirection/2)].getTurn(toTurn) == 2) && correctLane;
     }
 }

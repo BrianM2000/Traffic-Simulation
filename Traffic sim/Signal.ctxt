@@ -3,5 +3,5 @@ comment0.target=Signal
 comment1.params=
 comment1.target=Signal()
 comment2.params=i
-comment2.target=boolean\ getTurn(int)
+comment2.target=int\ getTurn(int)
 numComments=3
