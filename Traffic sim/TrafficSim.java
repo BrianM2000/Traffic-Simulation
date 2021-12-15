@@ -51,11 +51,12 @@ public class TrafficSim{
         
         //bc.addToRoads();
         
-        SouthBroadwayN.addLane(new Lane(false, false, true));
+        SouthBroadwayN.addLane(new Lane(false, true, true));
+        NorthBroadwayN.addLane(new Lane(false, true, true));
         
         Vehicle v1 = new Vehicle("CarLeft", 15, 25, 0, 0, SouthBroadwayN, WestFultonW, 0);
-        //Vehicle v4 = new Vehicle("CarBlocking", 30, 25, 0, .00284091, SouthBroadwayN, WestFultonW, 0);
-        Vehicle v3 = new Vehicle("Car", 15, 0, 0, .0028409*4, SouthBroadwayN, NorthBroadwayN, 1);
+        Vehicle v4 = new Vehicle("CarBlocking", 30, 25, 0, .00284091, SouthBroadwayN, WestFultonW, 0);
+        Vehicle v3 = new Vehicle("CarT", 15, 0, 0, .0028409*4, SouthBroadwayN, NorthBroadwayN, 1);
         Vehicle v2 = new Vehicle("CarThrough", 15, 25, 0, 0, NorthBroadwayS, SouthBroadwayS, 0);
         
         /*
