@@ -10,12 +10,16 @@ public class Vehicle{
     Road destRoad;
     int laneNum;
     static ArrayList<Vehicle> vehicles = new ArrayList<Vehicle>();
+    static ArrayList<Vehicle> toRemove = new ArrayList<Vehicle>();
     static int count = 1;
     boolean mustCheckNeighbor = true;
     Vehicle neighbor = null;
     boolean toClose;
+    boolean arrived = false;
+    boolean safe;
     boolean tester = true;
     int toTurn; //6 turns right, 2 turns left, 0 through, else cannot turn
+    int delay;
     
     public Vehicle(String type, double size, double speed, double accel, double position, Road currRoad, Road destRoad, int laneNum){  
         this.type = type;
@@ -38,27 +42,45 @@ public class Vehicle{
        
         for(Vehicle vehicle : vehicles){
             vehicle.move();
+            if(vehicle.arrived){
+                toRemove.add(vehicle);
+                System.out.println("removing " + vehicle);
+            }
         }
+        vehicles.removeAll(toRemove);
         ++count;
     }
     
     public void move(){
+        ++delay;
+        int toChange = this.rightLane();
+        safe = true;
+        if(toChange != 0){ 
+            this.changeLane(toChange); 
+        }
         this.accelerate();
         if(this.speed/3600 < 0){
             this.speed = 0;
         }
-        if(this.position > this.currRoad.length){
+        if(this.position >= this.currRoad.length){
+            if(this.currRoad == this.destRoad){
+                arrived = true;
+            }
+            this.currRoad.totalDelay = this.currRoad.totalDelay + ((this.delay) - (int) this.currRoad.perfDelay);
             this.currRoad.removeVehicleToLane(this, laneNum);
             this.position = this.position - this.currRoad.length;
             this.currRoad = this.destRoad;
+            //System.out.println(this.type + " moving to " + this.currRoad);
             this.currRoad.addVehicleToLane(this, laneNum);
             this.destRoad = this.currRoad; //should eventaully be this.destRoad = this.getNextDest();
+            this.delay = 0;
+            
         }
-        /*
+        
         if(type == "Car"){
             System.out.println(type + " " + this.speed + " mph " + position);
         }
-        */
+        
         this.position = this.position + this.speed/3600;
         //System.out.println(this.position);
         if(0 < this.position - this.currRoad.length && tester){
@@ -84,9 +106,12 @@ public class Vehicle{
         
         else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
             (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
-            !this.canGoThroughLight()){// make it so vehicles can go through yellow lights only if their position in the next 3 seconds is greater than the white line
+            this.currRoad.intersection != null && !this.canGoThroughLight()){// make it so vehicles can go through yellow lights only if their position in the next 3 seconds is greater than the white line
             this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 50 + 1);
             //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
+        }
+        else if(!safe){
+            this.accel = (this.currRoad.speedLimit/2 - this.speed)/Math.sqrt(this.currRoad.speedLimit/2);
         }
         
         else{
@@ -94,7 +119,7 @@ public class Vehicle{
         }
         /*
         if(this.canGoThroughLight()){
-            System.out.println(type + " is going " + toTurn + " at light " + this.currRoad.intersection.light);
+            System.out.println(type + " is going " + toTurn + " at light " + this.currRoad.intersection);
         }
         */
         //System.out.println("accel " + this.accel);
@@ -136,5 +161,71 @@ public class Vehicle{
             correctLane = false;
         }
         return (this.currRoad.intersection.pattern[(this.currRoad.federalDirection/2)].getTurn(toTurn) == 2) && correctLane;
+    }
+    
+    public void changeLane(int toChange){
+        safe = true;
+        Vehicle close = null;
+        try{//gotta check to make sure no ones in the way
+            for(Vehicle vehicle : this.currRoad.lanes.get(laneNum + toChange).vehicles){
+                if(this.position <= vehicle.position){//unhappy with this, but it works ok
+                    if(Math.abs(this.position - vehicle.position) < vehicle.size * 3){
+                        safe = false;
+                        System.out.println(vehicle.type + " is too close to infront of" + this.type);
+                    }
+                }
+                else{
+                    if(Math.abs(this.position - vehicle.position) < this.size * 3 || 
+                      (Math.abs(this.speed - vehicle.speed) * vehicle.position + (vehicle.speed/3600) * 3 < this.position)){
+                        System.out.println(vehicle.type + " is too close behind " + this.type);
+                        safe = false;
+                    }
+                }
+                if(neighbor == null && vehicle.position != position && vehicle.position - position > 0){
+                  close = vehicle;
+                }
+                else if(vehicle.position - position > 0 && vehicle.position - position < neighbor.position - position && vehicle.position - position != 0){
+                  close = vehicle;
+                }
+            }
+            if(safe){
+                currRoad.removeVehicleToLane(this, laneNum);
+                laneNum = laneNum + toChange;
+                currRoad.addVehicleToLane(this, laneNum);
+                //this.neighbor = close.neighbor;
+                //close.neighbor = this;
+                //System.out.println(this.position + " " + close.position);
+                System.out.println(this.type + " moved to lane " + laneNum);
+            }
+        }
+        catch(Exception e){
+            throw e;
+        }
+    }
+    
+    public int rightLane(){
+        int move = 0;
+        if(toTurn == 0){//straight
+            if(this.currRoad.lanes.get(laneNum).left && !this.currRoad.lanes.get(laneNum).through){
+                move = 1;
+            }
+            if(this.currRoad.lanes.get(laneNum).right && !this.currRoad.lanes.get(laneNum).through){
+                move = -1;
+            }
+        }
+        if(toTurn == 2){//left
+            if((this.currRoad.lanes.get(laneNum).through || this.currRoad.lanes.get(laneNum).right) && !this.currRoad.lanes.get(laneNum).left){
+                move = -1;
+            }
+        }
+        if(toTurn == 6){//right
+            if((this.currRoad.lanes.get(laneNum).through || this.currRoad.lanes.get(laneNum).left)&& !this.currRoad.lanes.get(laneNum).right){
+                move = 1;
+            }
+        }
+        if(toTurn == 4){//backwards, final destination
+            move = 0;
+        }
+        return move;
     }
 }

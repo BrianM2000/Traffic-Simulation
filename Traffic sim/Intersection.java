@@ -58,9 +58,11 @@ public class Intersection{
             for(Road road : inRoads){
                 road.intersection = intersection;
             }
+            /*
             for(Road road : outRoads){
                 road.intersection = intersection;
             }
+            */
         }
     }
 }

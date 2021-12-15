@@ -8,11 +8,13 @@ public class Road{
     int speedLimit;
     int federalDirection;
     int delay = 0;
+    static int totalSystemDelay = 0;
     double length;
     ArrayList<Lane> lanes = new ArrayList<Lane>();
     double perfDelay;
     Intersection intersection;
     static ArrayList<Road> roads = new ArrayList<Road>();
+    double totalDelay = 0;
     
     public Road(double startX, double startY, double endX, double endY, int speedLimit, int federalDirection, double length){
         this.startX = startX;
@@ -58,5 +60,13 @@ public class Road{
         for(Road road: roads){
             road.lanes.add(new Lane(true, true, true));
         }
+    }
+    
+    public static void printDelay(){
+        for(Road road: roads){
+            System.out.println(road + " had a delay of " + road.totalDelay + " seconds");
+            totalSystemDelay = totalSystemDelay + (int) road.totalDelay;
+        }
+        System.out.println("Total system delay " + totalSystemDelay);
     }
 }

@@ -9,12 +9,14 @@ public class TrafficSim{
         
         Instant start = Instant.now();
         
-        while(count < 50){
+        while(count < 3600){
             tick();
         }
         
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
+        
+        Road.printDelay();
         
         System.out.println("done! " + count + " simulated seconds elapsed in " + timeElapsed.toMillis() + " milliseconds");
     }
@@ -49,7 +51,11 @@ public class TrafficSim{
         
         //bc.addToRoads();
         
+        SouthBroadwayN.addLane(new Lane(false, false, true));
+        
         Vehicle v1 = new Vehicle("CarLeft", 15, 25, 0, 0, SouthBroadwayN, WestFultonW, 0);
+        //Vehicle v4 = new Vehicle("CarBlocking", 30, 25, 0, .00284091, SouthBroadwayN, WestFultonW, 0);
+        Vehicle v3 = new Vehicle("Car", 15, 0, 0, .0028409*4, SouthBroadwayN, NorthBroadwayN, 1);
         Vehicle v2 = new Vehicle("CarThrough", 15, 25, 0, 0, NorthBroadwayS, SouthBroadwayS, 0);
         
         /*
