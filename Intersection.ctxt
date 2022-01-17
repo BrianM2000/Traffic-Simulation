@@ -1,0 +1,13 @@
+#BlueJ class context
+comment0.target=Intersection
+comment1.params=x\ y
+comment1.target=Intersection(double,\ double)
+comment2.params=
+comment2.target=void\ tick()
+comment3.params=
+comment3.target=void\ next()
+comment4.params=
+comment4.target=void\ addRoads()
+comment5.params=
+comment5.target=void\ addToRoads()
+numComments=6

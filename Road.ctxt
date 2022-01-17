@@ -1,0 +1,19 @@
+#BlueJ class context
+comment0.target=Road
+comment1.params=startX\ startY\ endX\ endY\ speedLimit\ federalDirection\ length\ AADT\ numLanes\ turnLanes
+comment1.target=Road(double,\ double,\ double,\ double,\ int,\ int,\ double,\ int,\ int,\ java.lang.String)
+comment2.params=lane
+comment2.target=void\ addLane(Lane)
+comment3.params=vehicle\ laneNum
+comment3.target=void\ addVehicleToLane(Vehicle,\ int)
+comment4.params=vehicle\ laneNum
+comment4.target=void\ removeVehicleToLane(Vehicle,\ int)
+comment5.params=intersection
+comment5.target=void\ addToIntersection(Intersection)
+comment6.params=
+comment6.target=void\ addLanes()
+comment7.params=
+comment7.target=void\ newVehicle()
+comment8.params=
+comment8.target=void\ printDelay()
+numComments=9
