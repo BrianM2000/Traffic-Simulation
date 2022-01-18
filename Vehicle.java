@@ -48,6 +48,7 @@ public class Vehicle{
             }
         }
         vehicles.removeAll(toRemove);
+        System.out.println(vehicles.size());
         ++count;
     }
     
@@ -197,7 +198,7 @@ public class Vehicle{
         else{
             correctLane = false;
         }
-        return (this.currRoad.intersection.pattern[(this.currRoad.federalDirection/2)].getTurn(toTurn) == 2) && correctLane;
+        return (this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane;
     }
     
     public void changeLane(int toChange){// need to make vehicles spread out, rn they just stop at the first acceptable lane
