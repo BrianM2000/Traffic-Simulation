@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=IntersectionBuilder
+comment1.params=vertex
+comment1.target=IntersectionBuilder(Vertex)
+comment2.params=vrt
+comment2.target=void\ build(Vertex)
+numComments=3

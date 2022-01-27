@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Road{
+    String id;
     double startX;
     double startY;
     double endX;
@@ -22,7 +23,8 @@ public class Road{
     static Random rand = new Random(1);
     static int numCars = 0;
     
-    public Road(double startX, double startY, double endX, double endY, int speedLimit, int federalDirection, double length, int AADT, int numLanes, String turnLanes){
+    public Road(String id, double startX, double startY, double endX, double endY, int speedLimit, int federalDirection, double length, int AADT, int numLanes, String turnLanes){
+        this.id = id;
         this.startX = startX;
         this.startY = startY;
         this.endX = endX;
@@ -35,9 +37,10 @@ public class Road{
         this.turnLanes = turnLanes;
         this.perfDelay = Math.round(this.length/((this.speedLimit*1.0/3600)*1.0));
         
+        //System.out.println("adding road " + id);
         roads.add(this);
         
-        System.out.println(this.length + " " + perfDelay);
+        //System.out.println(this.length + " " + perfDelay);
     }
     
     public void addLane(Lane lane){
@@ -56,10 +59,10 @@ public class Road{
     
     public static void addToIntersection(Intersection intersection){
         for(Road road : roads){
-            if(road.startX == intersection.x && road.startY == intersection.y){
+            if(Math.abs(road.startX - intersection.vertex.x) < 0.000005 && Math.abs(road.startY - intersection.vertex.y) < 0.000005){
                 intersection.outRoads.add(road);
             }
-            else if(road.endX == intersection.x && road.endY == intersection.y){
+            else if(Math.abs(road.endX - intersection.vertex.x) < 0.000005 && Math.abs(road.endY - intersection.vertex.y) < 0.000005){
                 intersection.inRoads.add(road);
             }
         }
@@ -96,7 +99,7 @@ public class Road{
                     if(curLane.contains("left") || (curLane.equals("") && j == 0)){
                         road.lanes.get(j).left = true;
                     }
-                    if(curLane.contains("through") || curLane.equals("")){
+                    if(curLane.contains("through") || curLane.contains("none") || curLane.equals("")){
                         road.lanes.get(j).through = true;
                     }
                     if(curLane.contains("right") || (curLane.equals("") && j == road.numLanes - 1)){
@@ -106,10 +109,10 @@ public class Road{
                     ++j;
                 }
             }
-            System.out.println(road);
+            /*System.out.println(road.id);
             for(i = 0; i < road.numLanes; ++i){
                 System.out.println(road.lanes.get(i).left + " " + road.lanes.get(i).through + " " + road.lanes.get(i).right);
-            }
+            }*/
         }
     }
     
@@ -133,7 +136,7 @@ public class Road{
     
     public static void printDelay(){
         for(Road road: roads){
-            System.out.println(road + " had a delay of " + road.totalDelay + " seconds");
+            System.out.println(road.id + " had a delay of " + road.totalDelay + " seconds");
             totalSystemDelay = totalSystemDelay + (int) road.totalDelay;
         }
         System.out.println("Total system delay " + totalSystemDelay + " for " + numCars + " vehicles!");

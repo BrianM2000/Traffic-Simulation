@@ -81,30 +81,30 @@ public class Vehicle{
     
     public void accelerate(){
         
-        if(mustCheckNeighbor){
+        if(mustCheckNeighbor){//find neighbor
             neighbor = this.currRoad.lanes.get(laneNum).getNeighbor(position);
             mustCheckNeighbor = false;
         }
-        if(neighbor != null){
+        if(neighbor != null){//stay safe distance fro neighbor
             //System.out.println(neighbor.size);
             toClose = (neighbor.position - neighbor.size) - position < (Math.abs(neighbor.speed - speed)/3600) * 3 || 
                       (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
         }
-        if(neighbor != null && toClose && speed >= 0){
+        if(neighbor != null && toClose && speed >= 0){//slow down relative to neighbor
             this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 50 + 1);
         }
         
         else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
             (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
-            this.currRoad.intersection != null && !this.canGoThroughLight()){// make it so vehicles can go through yellow lights only if their position in the next 3 seconds is greater than the white line
+            this.currRoad.intersection != null && !this.canGoThroughLight()){//slowdown if not allowed to go through intersection
             this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 50 + 1);
             //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
         }
-        else if(!safe){
+        else if(!safe){//slow down if vehicle can't change lanes as desired
             this.accel = (this.currRoad.speedLimit/2 - this.speed)/Math.sqrt(this.currRoad.speedLimit/2) ;
         }
         
-        else{
+        else{//accelerate towards speed limit
             this.accel = (this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit);
         }
         /*
@@ -198,12 +198,14 @@ public class Vehicle{
         else{
             correctLane = false;
         }
-        return (this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane;
+        return ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane) ||
+        ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2)&& correctLane && this.canGoThruYellow());
     }
     
     public void changeLane(int toChange){// need to make vehicles spread out, rn they just stop at the first acceptable lane
         safe = true;
         Vehicle close = null;
+        int pos;
         try{//gotta check to make sure no ones in the way
             for(Vehicle vehicle : this.currRoad.lanes.get(laneNum + toChange).vehicles){
                 if(this.position <= vehicle.position){//unhappy with this, but it works ok; needs to account for speed
@@ -265,5 +267,23 @@ public class Vehicle{
             move = 0;
         }
         return move;
+    }
+    
+    public boolean canGoThruYellow(){
+        int i = 0;
+        for(Road road : this.currRoad.intersection.inRoads){
+                if(this.currRoad.federalDirection - road.federalDirection != 0){
+                    for(i = road.lanes.size() - 1; i >= 0; --i){
+                        if(road.lanes.get(i).through){
+                            for(Vehicle vehicle : road.lanes.get(i).vehicles){
+                                if(vehicle.position + (vehicle.speed/3600) * 3 > vehicle.currRoad.length - 0.00284091){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        return true;
     }
 }

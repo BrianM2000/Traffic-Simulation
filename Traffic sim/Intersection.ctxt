@@ -1,9 +1,9 @@
 #BlueJ class context
 comment0.target=Intersection
-comment1.params=x\ y
-comment1.target=Intersection(double,\ double)
-comment2.params=signal
-comment2.target=void\ addPattern(java.lang.String)
+comment1.params=vertex
+comment1.target=Intersection(Vertex)
+comment2.params=
+comment2.target=void\ generatePattern()
 comment3.params=
 comment3.target=void\ tick()
 comment4.params=

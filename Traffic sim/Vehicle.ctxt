@@ -16,4 +16,6 @@ comment7.params=toChange
 comment7.target=void\ changeLane(int)
 comment8.params=
 comment8.target=int\ rightLane()
-numComments=9
+comment9.params=
+comment9.target=boolean\ canGoThruYellow()
+numComments=10

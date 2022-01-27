@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=Vertex
+comment1.params=x\ y
+comment1.target=Vertex(double,\ double)
+comment2.params=x\ y\ id
+comment2.target=Vertex(double,\ double,\ java.lang.String)
+numComments=3
