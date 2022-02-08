@@ -1,4 +1,6 @@
 import java.util.*;
+import java.awt.*;
+import java.awt.geom.Path2D;
 import java.time.Duration;
 import java.time.Instant;
 import java.io.File;  
@@ -13,21 +15,38 @@ public class TrafficSim{
     static int count = 0;
     public static void main(String args[]){
         Instant start = Instant.now();
-       
+        int i = 0;
         generate();
-        /*
+        
+        
         while(count < 3600){//3600 for an hour; esitmate 5 minutes for 1 hour worth of simulated time for all 2,820 intersections in Manhattan
             tick();
+            System.out.println(count);
         }
-        */
-
+        
+       
+        for(Intersection inter : Intersection.intersections){
+            System.out.println(inter.outRoads.size());
+        }
+       
+        for(Road road : Road.roads){
+            if(road.AADT == 0){
+               ++i;
+               System.out.println(road.id);
+            }
+            if(road.id.equals("way/525038147")){
+                for(Lane lane : road.lanes){
+                    System.out.println(lane.left + " " + lane.through + " " + lane.right);
+                }
+            }
+        }
         System.out.println(Road.roads.size() + " roads");
         System.out.println(Intersection.intersections.size() + " intersections");
-       
+        
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         
-        //Road.printDelay();
+        Road.printDelay();
         
         System.out.println("done! " + count + " simulated seconds elapsed in " + timeElapsed.toMillis() + " milliseconds");
     }
@@ -48,11 +67,13 @@ public class TrafficSim{
         */
         
         ArrayList<Vertex> vertices = new ArrayList<Vertex>();
-        ArrayList<Vertex> toIntersection = new ArrayList<Vertex>();
+        ArrayList<Vertex> trafficVert = new ArrayList<Vertex>();
+        ArrayList<TrafficHelper> trafficHelper = new ArrayList<TrafficHelper>();
         
         //reading traffic Light intersections
         try{
-            FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanLights.xlsx"));
+            //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanLights.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testLights.xlsx"));
             XSSFWorkbook wb = new XSSFWorkbook(file);
             XSSFSheet sheet = wb.getSheetAt(0);
             int i;
@@ -71,7 +92,8 @@ public class TrafficSim{
                     ++i;
                 }
                 if(tempX != 0.0 && tempY != 0.0){
-                    new Intersection(new Vertex(tempX, tempY));
+                    Intersection temp = new Intersection(new Vertex(tempX, tempY));
+                    temp.signal = "002202t060102302t060";
                 }
             }
         }
@@ -89,26 +111,107 @@ public class TrafficSim{
         Vehicle car2 = new Vehicle("Motorcycle",10, 0, 0, .06, CedarStW, CedarStW, 0);
         Vehicle car3 = new Vehicle("Truck",72, 0, 10, 0.2, Broadway, CedarStE, 1);
         */
-       
-        //generating objects
-        boolean split = false;
-        boolean lastRow = false;
-        double length = 0;
-        double dist = 10000000;
-        double between = 0;
         
-        ArrayList<Vertex> roadVertices = new ArrayList<Vertex>();
-        Vertex closestVrt = null;
-        Vertex start = new Vertex(0,0);
-        Vertex vertex = new Vertex(0,0);
-        String id = "";
-        String name = "";
-        int limit = 0;
-        int direction = 0;
-        int lanes = 1;
-        String turns = ""; 
+        //get traffic info
+        //first, create Path2D an feed it vertices of a road
+        //then BasicStroke bs = new BasicStroke(float width);
+        //then bs.createStrokedShape(Path2D)
+        //then right before roads are declared, find shapes which contain the start and end points of roads
+        //shape.contains(start.x, start.y) && shape.contains(end.x, end.y);
+        
         try{
-            FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanTest.xlsx"));
+            //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanTraffic.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testTraffic.xlsx"));
+            XSSFWorkbook wb = new XSSFWorkbook(file);
+            XSSFSheet sheet = wb.getSheetAt(0);
+            
+            BasicStroke bs = new BasicStroke((float)0.0003);
+            Path2D path = new Path2D.Double();
+            Vertex start = null;
+            String id = "";
+            boolean lastRow = false;
+            double tempX = 0;
+            double tempY = 0;
+            int fedDir = 0;
+            int vertInd = 0;
+            int AADT = 0;
+            
+            for(Row row : sheet){
+                int i = 0;
+                for(Cell cell : row){
+                    switch (i) {
+                        case 0: id = String.valueOf(cell.getNumericCellValue());
+                                break;
+                        case 1: fedDir = (int)cell.getNumericCellValue();
+                                break;
+                        case 2: AADT = (int)cell.getNumericCellValue();
+                                break;
+                        case 3: vertInd = (int)cell.getNumericCellValue();
+                                break;
+                        case 4: tempX = cell.getNumericCellValue();
+                                break;
+                        case 5: tempY = cell.getNumericCellValue();
+                                break;
+                        default: break;
+                            }
+                    ++i;
+                }
+
+                if(vertInd == 0){
+                       start = new Vertex(tempX, tempY);
+                       path.moveTo(start.x, start.y);
+                   }
+                   
+                try{
+                    double tryTest = (sheet.getRow(row.getRowNum() + 1).getCell(0).getNumericCellValue());
+                    lastRow = false;
+                }
+                catch(Exception e){
+                    lastRow = true;
+                }
+                path.lineTo(tempX, tempY);
+                if(lastRow || !String.valueOf(sheet.getRow(row.getRowNum() + 1).getCell(0).getNumericCellValue()).equals(id)){
+                    new TrafficHelper(bs.createStrokedShape(path), AADT, fedDir);
+                    path.closePath();
+                    path = new Path2D.Double();
+                    trafficVert.clear();
+                }
+                if(lastRow){
+                    break;
+                }
+            }
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+        
+        //generating objects
+         
+        try{
+            
+            boolean split = false;
+            boolean lastRow = false;
+            boolean oneway = false;
+            double length = 0;
+            double dist = 10000000;
+            double between = 0;
+            
+            ArrayList<Vertex> roadVertices = new ArrayList<Vertex>();
+            Vertex closestVrt = null;
+            Vertex start = new Vertex(0,0);
+            Vertex vertex = new Vertex(0,0);
+            String id = "";
+            String name = "";
+            int limit = 0;
+            int AADT = 0;
+            int fedDir = 0;
+            int lanes = 1;
+            String turns = "";
+            int dirNS;
+            int dirEW;
+            
+            //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanTest.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testRoads.xlsx"));
             XSSFWorkbook wb = new XSSFWorkbook(file);
             XSSFSheet sheet = wb.getSheetAt(0);
             int i = 0;
@@ -123,9 +226,9 @@ public class TrafficSim{
                     switch (i) {
                         case 0: id = cell.getStringCellValue();
                                 break;
-                        case 7: tempX = cell.getNumericCellValue();
+                        case 8: tempX = cell.getNumericCellValue();
                                 break;
-                        case 8: tempY = cell.getNumericCellValue();
+                        case 9: tempY = cell.getNumericCellValue();
                                 break;
                         default: break;
                             }
@@ -162,17 +265,21 @@ public class TrafficSim{
                                 break;
                         case 2: name = cell.getStringCellValue();
                                 break;
-                        case 3: start.x = cell.getNumericCellValue();
+                        case 3: if(cell.getStringCellValue().equals("yes")){
+                                    oneway = true;
+                                }
                                 break;
-                        case 4: start.y = cell.getNumericCellValue();
+                        case 4: start.x = cell.getNumericCellValue();
                                 break;
-                        case 5: lanes = ((int)cell.getNumericCellValue());
+                        case 5: start.y = cell.getNumericCellValue();
                                 break;
-                        case 6: turns = cell.getStringCellValue();
+                        case 6: lanes = ((int)cell.getNumericCellValue());
                                 break;
-                        case 7: tempX = cell.getNumericCellValue();
+                        case 7: turns = cell.getStringCellValue();
                                 break;
-                        case 8: tempY = cell.getNumericCellValue();
+                        case 8: tempX = cell.getNumericCellValue();
+                                break;
+                        case 9: tempY = cell.getNumericCellValue();
                                 break;
 
                         default: break;
@@ -212,11 +319,45 @@ public class TrafficSim{
                         length = length + dist;
                         //System.out.println(length);
                         for(Intersection inter : Intersection.intersections){
-                            if(Math.abs(inter.vertex.x - closestVrt.x) < 0.000005 && Math.abs(inter.vertex.y - closestVrt.y) < 0.000005){
-                                new Road(id, start.x, start.y, inter.vertex.x, inter.vertex.y, limit, 0, length, 0, lanes, turns);
+                            if(Math.abs(inter.vertex.x - closestVrt.x) < 0.000005 && Math.abs(inter.vertex.y - closestVrt.y) < 0.000005
+                            && (start.x != inter.vertex.x && start.y != inter.vertex.y)){
+                                if(start.x - inter.vertex.x > 0){
+                                    dirEW = 7;
+                                }
+                                else{
+                                    dirEW = 3;
+                                }
+                                if(start.y - inter.vertex.y > 0){
+                                    dirNS = 5;
+                                }
+                                else{
+                                    dirNS = 1;
+                                }
+                                for(TrafficHelper tf : TrafficHelper.trafficHelpers){
+                                    if(tf.shape.contains(start.x, start.y) && tf.shape.contains(inter.vertex.x, inter.vertex.y) &&
+                                      (dirEW == fedDir || dirNS == fedDir)){
+                                        AADT = tf.AADT;
+                                        fedDir = tf.fedDir;
+                                    }
+                                }
+                                dirNS = (dirNS + 4)%8;
+                                dirEW = (dirEW + 4)%8;
+                                new Road(id, start.x, start.y, inter.vertex.x, inter.vertex.y, limit, AADT, length, fedDir, lanes, turns);
+                                if(!oneway){
+                                    for(TrafficHelper tf : TrafficHelper.trafficHelpers){
+                                        if(tf.shape.contains(start.x, start.y) && tf.shape.contains(inter.vertex.x, inter.vertex.y) &&
+                                          (dirEW == fedDir || dirNS == fedDir)){
+                                            AADT = tf.AADT;
+                                            fedDir = tf.fedDir;
+                                        }
+                                    }
+                                    new Road(id, inter.vertex.x, inter.vertex.y, start.x, start.y, limit, 0, length, 0, lanes, turns);
+                                }
                                 //System.out.println("break " + inter + " " + inter.vertex.x + " " + inter.vertex.y);
                                 length = 0;
                                 newRoad = false;
+                                start.x = inter.vertex.x;
+                                start.y = inter.vertex.y;
                                 break;
                             }
                         }
@@ -225,11 +366,43 @@ public class TrafficSim{
                         roadVertices.remove(vertex);
                         vertex = closestVrt;
                     }
+                    if(start.x - vertex.x > 0){
+                        dirEW = 7;
+                    }
+                    else{
+                        dirEW = 3;
+                    }
+                    if(start.y - vertex.y > 0){
+                        dirNS = 5;
+                    }
+                    else{
+                        dirNS = 1;
+                    }
+                    for(TrafficHelper tf : TrafficHelper.trafficHelpers){
+                        if(tf.shape.contains(start.x, start.y) && tf.shape.contains(vertex.x, vertex.y) &&
+                        (dirEW == fedDir || dirNS == fedDir)){
+                            AADT = tf.AADT;
+                            fedDir = tf.fedDir;
+                        }
+                    }
+                    dirNS = (dirNS + 4)%8;
+                    dirEW = (dirEW + 4)%8;
                     if(newRoad){
                         new Road(id, start.x, start.y, vertex.x, vertex.y, limit, 0, length, 0, lanes, turns);
+                        if(!oneway){
+                            for(TrafficHelper tf : TrafficHelper.trafficHelpers){
+                                if(tf.shape.contains(start.x, start.y) && tf.shape.contains(vertex.x, vertex.y) &&
+                                (dirEW == fedDir || dirNS == fedDir)){
+                                    AADT = tf.AADT;
+                                    fedDir = tf.fedDir;
+                                }
+                            }
+                            new Road(id, vertex.x, vertex.y, start.x, start.y, limit, 0, length, 0, lanes, turns);
+                        }
                     }
                     //System.out.println(length);
                     roadVertices.clear();
+                    oneway = false;
                 }
                 if(lastRow){
                     break;
@@ -263,6 +436,16 @@ public class TrafficSim{
         
         for(Intersection inter : Intersection.intersections){
             inter.generatePattern();
+        }
+        
+        for(Road road : Road.roads){//put this by road declaration
+            for(TrafficHelper tf : TrafficHelper.trafficHelpers){
+                if((tf.shape.contains(road.startX, road.startY) && tf.shape.contains(road.endX, road.endY)) && road.federalDirection == 0){
+                    road.AADT = tf.AADT;
+                    road.federalDirection = tf.fedDir;
+                }
+            }
+            
         }
         
     }

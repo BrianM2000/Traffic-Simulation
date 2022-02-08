@@ -2,8 +2,8 @@ import java.util.*;
 
 public class Intersection{
     //TrafficLight light;
-    static ArrayList<Road> inRoads = new ArrayList<Road>();
-    static ArrayList<Road> outRoads = new ArrayList<Road>();
+    ArrayList<Road> inRoads = new ArrayList<Road>();
+    ArrayList<Road> outRoads = new ArrayList<Road>();
     Vertex vertex;
     ArrayList<Signal> pattern = new ArrayList<Signal>();
     int timer = 0;
@@ -23,18 +23,18 @@ public class Intersection{
     }
     
     public void generatePattern(){
-        for(i = 0; i < inRoads.size(); ++i){ //0 north, 1 east, 2 south, 3 west
+        for(i = 0; i < 4; ++i){ //0 north, 1 east, 2 south, 3 west
         pattern.add(new Signal());
        }
        
        if(signal.equals("0")){
-           for(k = 0; k < inRoads.size(); ++k){
+           for(k = 0; k < 4; ++k){
                 pattern.get(k).left = 2;
                 pattern.get(k).through = 2;
             }
        }
        if(signal.equals("1")){
-           for(k = 0; k < inRoads.size(); ++k){
+           for(k = 0; k < 4; ++k){
                 pattern.get(k).left = 1;
                 pattern.get(k).through = 1;
             }
@@ -45,7 +45,7 @@ public class Intersection{
         for(Intersection light : intersections){
             light.next();
             
-            for(Road road : inRoads){
+            for(Road road : light.inRoads){
                 double chance = rand.nextInt(1000) + 1;
                 //System.out.println(chance + " " + (road.AADT/86400) * 1000);
                 if(chance <= ((road.AADT * 1.0)/86400.0) * 1000){
@@ -59,9 +59,9 @@ public class Intersection{
     public void next(){
         //example code "002202t060102302t060";
         //each 3 digits is a 'block', first for direction of road; second, light of left turn signal; third, light of through signal; t means next block represents time those lights are green for
-        if(!signal.equals("0") || !signal.equals("1")){
+        if(!signal.equals("0") && !signal.equals("1")){
             if(timer == 0){
-                for(k = 0; k < inRoads.size(); ++k){
+                for(k = 0; k < 4; ++k){
                     pattern.get(k).left = 0;
                     pattern.get(k).through = 0;
                 }
@@ -96,7 +96,7 @@ public class Intersection{
     
     public static void addToRoads(){
         for(Intersection intersection : intersections){
-            for(Road road : inRoads){
+            for(Road road : intersection.inRoads){
                 road.intersection = intersection;
             }
             /*

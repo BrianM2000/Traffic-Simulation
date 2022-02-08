@@ -59,10 +59,10 @@ public class Road{
     
     public static void addToIntersection(Intersection intersection){
         for(Road road : roads){
-            if(Math.abs(road.startX - intersection.vertex.x) < 0.000005 && Math.abs(road.startY - intersection.vertex.y) < 0.000005){
+            if(Math.abs(road.startX - intersection.vertex.x) < 0.00000001 && Math.abs(road.startY - intersection.vertex.y) < 0.00000001){
                 intersection.outRoads.add(road);
             }
-            else if(Math.abs(road.endX - intersection.vertex.x) < 0.000005 && Math.abs(road.endY - intersection.vertex.y) < 0.000005){
+            else if(Math.abs(road.endX - intersection.vertex.x) < 0.00000001 && Math.abs(road.endY - intersection.vertex.y) < 0.00000001){
                 intersection.inRoads.add(road);
             }
         }
@@ -96,13 +96,13 @@ public class Road{
                         i = i + curLane.length() - 1;
                     }
                     //System.out.println(curLane);
-                    if(curLane.contains("left") || (curLane.equals("") && j == 0)){
+                    if(curLane.contains("left") || curLane.contains("none") || (curLane.equals("") && j == 0)){
                         road.lanes.get(j).left = true;
                     }
                     if(curLane.contains("through") || curLane.contains("none") || curLane.equals("")){
                         road.lanes.get(j).through = true;
                     }
-                    if(curLane.contains("right") || (curLane.equals("") && j == road.numLanes - 1)){
+                    if(curLane.contains("right") || curLane.contains("none") || (curLane.equals("") && j == road.numLanes - 1)){
                         road.lanes.get(j).right = true;
                     }
                     //System.out.println(j);
@@ -119,9 +119,14 @@ public class Road{
     public void newVehicle(){ //should eventually pick from different types i.e. cars, motorcycle, trucks
         Road destRoad;
         do{
-             destRoad = this.intersection.outRoads.get(rand.nextInt(this.intersection.outRoads.size()));
+            int i = this.intersection.outRoads.size();
+            if(i == 0){
+                destRoad = this;
+            }
+            else{
+                destRoad = this.intersection.outRoads.get(rand.nextInt(i));
+            }
         }while(Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4);
-        
         new Vehicle(Integer.toString(numCars), //name
                     rand.nextInt(10) + 10, //size
                     this.speedLimit, //speed
@@ -136,7 +141,7 @@ public class Road{
     
     public static void printDelay(){
         for(Road road: roads){
-            System.out.println(road.id + " had a delay of " + road.totalDelay + " seconds");
+            System.out.println(road.id + " " + road.federalDirection + " had a delay of " + road.totalDelay + " seconds");
             totalSystemDelay = totalSystemDelay + (int) road.totalDelay;
         }
         System.out.println("Total system delay " + totalSystemDelay + " for " + numCars + " vehicles!");

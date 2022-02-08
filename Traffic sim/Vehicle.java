@@ -48,7 +48,7 @@ public class Vehicle{
             }
         }
         vehicles.removeAll(toRemove);
-        System.out.println(vehicles.size());
+        //System.out.println(vehicles.size());
         ++count;
     }
     
@@ -245,6 +245,7 @@ public class Vehicle{
     
     public int rightLane(){
         int move = 0;
+        //System.out.println(this.currRoad.id + " "+ this.currRoad.federalDirection + " " + this.destRoad.id + " " + this.destRoad.federalDirection);
         if(toTurn == 0){//straight
             if(this.currRoad.lanes.get(laneNum).left && !this.currRoad.lanes.get(laneNum).through){
                 move = 1;
