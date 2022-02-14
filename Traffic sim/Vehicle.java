@@ -85,11 +85,17 @@ public class Vehicle{
             neighbor = this.currRoad.lanes.get(laneNum).getNeighbor(position);
             mustCheckNeighbor = false;
         }
-        if(neighbor != null){//stay safe distance fro neighbor
+        
+        if(neighbor != null){//stay safe distance from neighbor; needs to check for cars in next lane 
             //System.out.println(neighbor.size);
             toClose = (neighbor.position - neighbor.size) - position < (Math.abs(neighbor.speed - speed)/3600) * 3 || 
                       (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
         }
+        /*
+        else if(neighbor == null && (this.position + this.speed/3600) > this.currRoad.length){
+            //keep vehicle a safe distance from vehicles in destRoad; need to change how vehicles are kept track of first, to a more optimal way
+        }
+        */
         if(neighbor != null && toClose && speed >= 0){//slow down relative to neighbor
             this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 50 + 1);
         }

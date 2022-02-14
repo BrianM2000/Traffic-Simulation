@@ -42,23 +42,25 @@ public class Intersection{
     }
     
     public static void tick(){
+        
         for(Intersection light : intersections){
             light.next();
             
             for(Road road : light.inRoads){
                 double chance = rand.nextInt(1000) + 1;
-                //System.out.println(chance + " " + (road.AADT/86400) * 1000);
                 if(chance <= ((road.AADT * 1.0)/86400.0) * 1000){
                     road.newVehicle();
                     //System.out.println("adding new car to " + road);
                 }
             }
         }
+        
     }
     
     public void next(){
         //example code "002202t060102302t060";
         //each 3 digits is a 'block', first for direction of road; second, light of left turn signal; third, light of through signal; t means next block represents time those lights are green for
+        
         if(!signal.equals("0") && !signal.equals("1")){
             if(timer == 0){
                 for(k = 0; k < 4; ++k){

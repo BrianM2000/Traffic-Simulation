@@ -25,19 +25,10 @@ public class TrafficSim{
         }
         
        
-        for(Intersection inter : Intersection.intersections){
-            System.out.println(inter.outRoads.size());
-        }
-       
         for(Road road : Road.roads){
             if(road.AADT == 0){
                ++i;
                System.out.println(road.id);
-            }
-            if(road.id.equals("way/525038147")){
-                for(Lane lane : road.lanes){
-                    System.out.println(lane.left + " " + lane.through + " " + lane.right);
-                }
             }
         }
         System.out.println(Road.roads.size() + " roads");
@@ -52,19 +43,6 @@ public class TrafficSim{
     }
     
     public static void generate(){ //blank args for now, will read info from xlsx in future
-        //temp hard coded generation
-        //Road CedarStW = new Road(-74.00983, 40.70812, -74.01284, 40.70971, 25, 7, 311.03021, 3, "");
-        //Road CedarStE = new Road(-74.01284, 40.70971, -74.00983, 40.70812, 25, 3, 311.03021, 3,"left|through|right");
-        /*
-        Road SouthBroadwayN = new Road(-74.00953, 40.71032, -74.00906, 40.71088, 25, 1, 74.23706, 3264, 3,"left||right");
-        Road SouthBroadwayS = new Road(-74.00906, 40.71088, -74.00953, 40.71032, 25, 5, 74.23706, 3264, 3,"left|through|right");
-        Road NorthBroadwayN = new Road(-74.00906, 40.71088, -74.00865, 40.71138, 25, 1, 65.46808, 3264, 3,"left|through|right");
-        Road NorthBroadwayS = new Road(-74.00865, 40.71138, -74.00906, 40.71088, 25, 5, 65.46808, 3264, 3,"left|through|right");
-        Road WestFultonE = new Road(-74.01043, 40.71152, -74.00906, 40.71088, 25, 3, 135.86778, 1779, 3,"left|through|right");
-        Road WestFultonW = new Road(-74.00906, 40.71088, -74.01043, 40.71152, 25, 7, 135.86778, 1779, 3,"left|through|right");
-        Road EastFultonE = new Road(-74.00906, 40.71088, -74.00775, 40.71022, 25, 3, 133.22134, 4767, 3,"left|through|right");
-        Road EastFultonW = new Road(-74.00775, 40.71022, -74.00906, 40.71088, 25, 3, 133.22134, 4767, 3,"left|through|right");
-        */
         
         ArrayList<Vertex> vertices = new ArrayList<Vertex>();
         ArrayList<Vertex> trafficVert = new ArrayList<Vertex>();
@@ -101,16 +79,6 @@ public class TrafficSim{
             e.printStackTrace();
         }
         
-        /*
-        Vehicle v1 = new Vehicle("CarLeft", 15, 25, 0, 0, SouthBroadwayN, WestFultonW, 0);
-        Vehicle v4 = new Vehicle("CarBlocking", 30, 25, 0, .00284091, SouthBroadwayN, WestFultonW, 0);
-        Vehicle v3 = new Vehicle("CarT", 15, 0, 0, .0028409*4, SouthBroadwayN, NorthBroadwayN, 1);
-        Vehicle v2 = new Vehicle("CarThrough", 15, 25, 0, 0, NorthBroadwayS, SouthBroadwayS, 0);
-        
-        Vehicle car1 = new Vehicle("Car",15, 25, 0, 0, CedarStW, Broadway, 0);
-        Vehicle car2 = new Vehicle("Motorcycle",10, 0, 0, .06, CedarStW, CedarStW, 0);
-        Vehicle car3 = new Vehicle("Truck",72, 0, 10, 0.2, Broadway, CedarStE, 1);
-        */
         
         //get traffic info
         //first, create Path2D an feed it vertices of a road
@@ -255,6 +223,8 @@ public class TrafficSim{
                 i = 0;
                 double tempX = 0;
                 double tempY = 0;
+                AADT = 0;
+                fedDir = 0;
                 
                 for(Cell cell : row){
                     switch (i) {
@@ -335,23 +305,24 @@ public class TrafficSim{
                                 }
                                 for(TrafficHelper tf : TrafficHelper.trafficHelpers){
                                     if(tf.shape.contains(start.x, start.y) && tf.shape.contains(inter.vertex.x, inter.vertex.y) &&
-                                      (dirEW == fedDir || dirNS == fedDir)){
+                                      (dirEW == tf.fedDir || dirNS == tf.fedDir)){
                                         AADT = tf.AADT;
                                         fedDir = tf.fedDir;
+                                        System.out.println(AADT + " " + fedDir);
                                     }
                                 }
                                 dirNS = (dirNS + 4)%8;
                                 dirEW = (dirEW + 4)%8;
-                                new Road(id, start.x, start.y, inter.vertex.x, inter.vertex.y, limit, AADT, length, fedDir, lanes, turns);
+                                new Road(id, start.x, start.y, inter.vertex.x, inter.vertex.y, limit, fedDir, length, AADT, lanes, turns);
                                 if(!oneway){
                                     for(TrafficHelper tf : TrafficHelper.trafficHelpers){
                                         if(tf.shape.contains(start.x, start.y) && tf.shape.contains(inter.vertex.x, inter.vertex.y) &&
-                                          (dirEW == fedDir || dirNS == fedDir)){
+                                          (dirEW == tf.fedDir || dirNS == tf.fedDir)){
                                             AADT = tf.AADT;
                                             fedDir = tf.fedDir;
                                         }
                                     }
-                                    new Road(id, inter.vertex.x, inter.vertex.y, start.x, start.y, limit, 0, length, 0, lanes, turns);
+                                    new Road(id, inter.vertex.x, inter.vertex.y, start.x, start.y, limit, fedDir, length, AADT, lanes, turns);
                                 }
                                 //System.out.println("break " + inter + " " + inter.vertex.x + " " + inter.vertex.y);
                                 length = 0;
@@ -380,7 +351,7 @@ public class TrafficSim{
                     }
                     for(TrafficHelper tf : TrafficHelper.trafficHelpers){
                         if(tf.shape.contains(start.x, start.y) && tf.shape.contains(vertex.x, vertex.y) &&
-                        (dirEW == fedDir || dirNS == fedDir)){
+                        (dirEW == tf.fedDir || dirNS == tf.fedDir)){
                             AADT = tf.AADT;
                             fedDir = tf.fedDir;
                         }
@@ -388,16 +359,16 @@ public class TrafficSim{
                     dirNS = (dirNS + 4)%8;
                     dirEW = (dirEW + 4)%8;
                     if(newRoad){
-                        new Road(id, start.x, start.y, vertex.x, vertex.y, limit, 0, length, 0, lanes, turns);
+                        new Road(id, start.x, start.y, vertex.x, vertex.y, limit, fedDir, length, AADT, lanes, turns);
                         if(!oneway){
                             for(TrafficHelper tf : TrafficHelper.trafficHelpers){
                                 if(tf.shape.contains(start.x, start.y) && tf.shape.contains(vertex.x, vertex.y) &&
-                                (dirEW == fedDir || dirNS == fedDir)){
+                                (dirEW == tf.fedDir || dirNS == tf.fedDir)){
                                     AADT = tf.AADT;
                                     fedDir = tf.fedDir;
                                 }
                             }
-                            new Road(id, vertex.x, vertex.y, start.x, start.y, limit, 0, length, 0, lanes, turns);
+                            new Road(id, vertex.x, vertex.y, start.x, start.y, limit, fedDir, length, AADT, lanes, turns);
                         }
                     }
                     //System.out.println(length);
@@ -416,7 +387,6 @@ public class TrafficSim{
         
         Road.addLanes();
         
-        //Intersection BroadwayFulton = new Intersection(new Vertex(-74.00906, 40.71088));
         //BroadwayFulton.signal = "002202t060102302t060"; //each 3 digits is a 'block', first for direction of road; second, light of left turn signal; third, light of through signal; t means next block represents time those lights are green for
         
         Intersection.addRoads();
@@ -436,16 +406,6 @@ public class TrafficSim{
         
         for(Intersection inter : Intersection.intersections){
             inter.generatePattern();
-        }
-        
-        for(Road road : Road.roads){//put this by road declaration
-            for(TrafficHelper tf : TrafficHelper.trafficHelpers){
-                if((tf.shape.contains(road.startX, road.startY) && tf.shape.contains(road.endX, road.endY)) && road.federalDirection == 0){
-                    road.AADT = tf.AADT;
-                    road.federalDirection = tf.fedDir;
-                }
-            }
-            
         }
         
     }

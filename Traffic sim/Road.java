@@ -122,9 +122,14 @@ public class Road{
             int i = this.intersection.outRoads.size();
             if(i == 0){
                 destRoad = this;
+                break;
             }
             else{
                 destRoad = this.intersection.outRoads.get(rand.nextInt(i));
+                if((Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4) && i == 1){
+                    destRoad = this;
+                    break;
+                }
             }
         }while(Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4);
         new Vehicle(Integer.toString(numCars), //name
