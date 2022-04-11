@@ -3,9 +3,8 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 import java.time.Duration;
 import java.time.Instant;
-import java.io.File;  
-import java.io.FileInputStream;  
-import java.util.Iterator;  
+import java.io.*;    
+import javax.swing.*;
 import org.apache.poi.ss.usermodel.Cell;  
 import org.apache.poi.ss.usermodel.Row;  
 import org.apache.poi.xssf.usermodel.XSSFSheet;  
@@ -17,14 +16,17 @@ public class TrafficSim{
         Instant start = Instant.now();
         int i = 0;
         generate();
+        String location = writeToFile();
         
-        
-        while(count < 3600){//3600 for an hour; esitmate 5 minutes for 1 hour worth of simulated time for all 2,820 intersections in Manhattan
+        System.out.println("Enviorment generated successfully! Written to " + location);
+
+        while(count < 3600){//3600 for an hour;
             tick();
             System.out.println(count);
+            //System.out.println(" num vehicles: " + Vehicle.vehicles.size());
         }
         
-       
+        /*
         for(Road road : Road.roads){
             if(road.AADT == 0){
                ++i;
@@ -33,25 +35,28 @@ public class TrafficSim{
         }
         System.out.println(Road.roads.size() + " roads");
         System.out.println(Intersection.intersections.size() + " intersections");
-        
+        */
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         
         Road.printDelay();
+        saveDelay();
         
         System.out.println("done! " + count + " simulated seconds elapsed in " + timeElapsed.toMillis() + " milliseconds");
+
+        Canvas canvas = new DelayMap();
+        canvas.setSize(1536, 864);
+        new DelayMap(canvas);
     }
     
     public static void generate(){ //blank args for now, will read info from xlsx in future
         
-        ArrayList<Vertex> vertices = new ArrayList<Vertex>();
         ArrayList<Vertex> trafficVert = new ArrayList<Vertex>();
-        ArrayList<TrafficHelper> trafficHelper = new ArrayList<TrafficHelper>();
         
         //reading traffic Light intersections
         try{
             //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanLights.xlsx"));
-            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testLights.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\DowntownLights.xlsx"));
             XSSFWorkbook wb = new XSSFWorkbook(file);
             XSSFSheet sheet = wb.getSheetAt(0);
             int i;
@@ -89,42 +94,51 @@ public class TrafficSim{
         
         try{
             //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanTraffic.xlsx"));
-            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testTraffic.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\DowntownTraffic.xlsx"));
             XSSFWorkbook wb = new XSSFWorkbook(file);
             XSSFSheet sheet = wb.getSheetAt(0);
             
-            BasicStroke bs = new BasicStroke((float)0.0003);
+            BasicStroke bs = new BasicStroke((float)0.0005);
             Path2D path = new Path2D.Double();
             Vertex start = null;
             String id = "";
+            boolean oneway = false;
             boolean lastRow = false;
             double tempX = 0;
             double tempY = 0;
             int fedDir = 0;
             int vertInd = 0;
             int AADT = 0;
-            
+            //Traffic data
             for(Row row : sheet){
                 int i = 0;
                 for(Cell cell : row){
                     switch (i) {
                         case 0: id = String.valueOf(cell.getNumericCellValue());
                                 break;
-                        case 1: fedDir = (int)cell.getNumericCellValue();
+                        case 1: if(cell.getStringCellValue().contains("Y")){
+                                    oneway = true;
+                        }
+                        else{
+                            oneway = false;
+                        }
                                 break;
-                        case 2: AADT = (int)cell.getNumericCellValue();
+                        case 2: fedDir = (int)cell.getNumericCellValue();
                                 break;
-                        case 3: vertInd = (int)cell.getNumericCellValue();
+                        case 3: AADT = (int)cell.getNumericCellValue();
                                 break;
-                        case 4: tempX = cell.getNumericCellValue();
+                        case 4: vertInd = (int)cell.getNumericCellValue();
                                 break;
-                        case 5: tempY = cell.getNumericCellValue();
+                        case 5: tempX = cell.getNumericCellValue();
+                                break;
+                        case 6: tempY = cell.getNumericCellValue();
                                 break;
                         default: break;
+
                             }
                     ++i;
                 }
-
+                
                 if(vertInd == 0){
                        start = new Vertex(tempX, tempY);
                        path.moveTo(start.x, start.y);
@@ -139,7 +153,7 @@ public class TrafficSim{
                 }
                 path.lineTo(tempX, tempY);
                 if(lastRow || !String.valueOf(sheet.getRow(row.getRowNum() + 1).getCell(0).getNumericCellValue()).equals(id)){
-                    new TrafficHelper(bs.createStrokedShape(path), AADT, fedDir);
+                    new TrafficHelper(bs.createStrokedShape(path), AADT, fedDir, oneway);
                     path.closePath();
                     path = new Path2D.Double();
                     trafficVert.clear();
@@ -157,7 +171,6 @@ public class TrafficSim{
          
         try{
             
-            boolean split = false;
             boolean lastRow = false;
             boolean oneway = false;
             double length = 0;
@@ -179,12 +192,11 @@ public class TrafficSim{
             int dirEW;
             
             //FileInputStream file = new FileInputStream(new File("C:\\Users\\thepa\\Desktop\\downtownManhattanTest.xlsx"));
-            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\testRoads.xlsx"));
+            FileInputStream file = new FileInputStream(new File("E:\\TestRoads\\SmallDowntownRoads.xlsx"));
             XSSFWorkbook wb = new XSSFWorkbook(file);
             XSSFSheet sheet = wb.getSheetAt(0);
             int i = 0;
             int j = 0;
-            int k = 0;
             
             for(Row row : sheet){//non-light intersections generation
                 i = 0;
@@ -214,7 +226,7 @@ public class TrafficSim{
                     }
                 }
                 
-                if((ib.count > 0) && !already){//NOT THE RIGHT PLACE To ASSING SIGNAL, MUST COME AFTER I KNOW WHAT ROADS ARE A PART OF INTERSECTION
+                if((ib.count > 0) && !already){
                     Intersection temp = new Intersection(ib.vertex);
                 }
             }
@@ -225,6 +237,7 @@ public class TrafficSim{
                 double tempY = 0;
                 AADT = 0;
                 fedDir = 0;
+                oneway = false;
                 
                 for(Cell cell : row){
                     switch (i) {
@@ -272,7 +285,6 @@ public class TrafficSim{
                     length = 0;
                     boolean newRoad = true;
                     int numVertices = roadVertices.size();
-                    Intersection toRemove = null;
                     closestVrt = null;
                     for(j = 0; j < numVertices; ++j){
                         newRoad = true;
@@ -308,7 +320,12 @@ public class TrafficSim{
                                       (dirEW == tf.fedDir || dirNS == tf.fedDir)){
                                         AADT = tf.AADT;
                                         fedDir = tf.fedDir;
-                                        System.out.println(AADT + " " + fedDir);
+                                        //System.out.println(AADT + " " + fedDir);
+                                        
+                                        if(tf.oneway == true){
+                                            oneway = true;
+                                        } 
+                                        
                                     }
                                 }
                                 dirNS = (dirNS + 4)%8;
@@ -385,13 +402,12 @@ public class TrafficSim{
              e.printStackTrace();
         }
         
-        Road.addLanes();
-        
         //BroadwayFulton.signal = "002202t060102302t060"; //each 3 digits is a 'block', first for direction of road; second, light of left turn signal; third, light of through signal; t means next block represents time those lights are green for
         
         Intersection.addRoads();
         Intersection.addToRoads();
         
+        //THIS ONLY WORKS FOR ONEWAY ROADS!!!!!!!
         for(Intersection inter : Intersection.intersections){
             if(inter.signal.equals("0")){
                 if(inter.inRoads.size() == 1){
@@ -404,10 +420,140 @@ public class TrafficSim{
             inter.generatePattern();
         }
         
-        for(Intersection inter : Intersection.intersections){
-            inter.generatePattern();
+        if(false){ //incase I wanna turn on filling in empty data later
+            for(Intersection inter : Intersection.intersections){
+                inter.generatePattern();
+                
+                for(Road road : inter.outRoads){
+                    if(road.federalDirection == 0){
+                        int dirEW = 0;
+                        int dirNS = 0;
+                        
+                        if(road.startX - road.endX > 0){
+                            dirEW = 7;
+                        }
+                        else{
+                            dirEW = 3;
+                        }
+                        if(road.startY - road.endY > 0){
+                            dirNS = 5;
+                        }
+                        else{
+                            dirNS = 1;
+                        }
+                        Road compare;
+                        if(inter.inRoads.size() > 0 && inter.inRoads.get(0) == road && inter.outRoads.size() > 1){
+                            compare = inter.outRoads.get(1);
+                        }
+                        else{
+                            compare = inter.outRoads.get(0);
+                        }
+                        double m1 = ((road.startY - road.endY)/(road.startX - road.endX) + .00000001);
+                        double m2 = ((compare.startY - compare.endY)/(compare.startX - compare.endX) + .00000001);
+                        double angle = Math.abs(Math.toDegrees(Math.atan(((m1)-(m2)))/(1+(m1)*(m2))));
+                        //System.out.println(road.id + " " + compare.id + " " + angle + " " + dirNS + " " + dirEW + " " + compare.federalDirection);
+                        if(angle > 130 && angle < 230){
+                            if(Math.floorMod(compare.federalDirection - dirEW, 8) == 4){
+                                road.federalDirection = dirEW;
+                            }
+                            else if(Math.floorMod(compare.federalDirection - dirNS, 8) == 4){
+                                road.federalDirection = dirNS;
+                            }
+                        }
+                        else{
+                            if(Math.abs(compare.federalDirection - dirEW%8) == 2){
+                                road.federalDirection = dirEW;
+                            }
+                            else if(Math.abs(compare.federalDirection - dirNS%8) == 2){
+                                road.federalDirection = dirNS;
+                            }
+                        }
+                    }
+                }
+                
+                //Fill in FedDir for roads missing that data in spreadsheet
+                for(Road road : inter.inRoads){
+                    if(road.federalDirection == 0){
+                        int dirEW = 0;
+                        int dirNS = 0;
+                        
+                        if(road.startX - road.endX > 0){
+                            dirEW = 7;
+                        }
+                        else{
+                            dirEW = 3;
+                        }
+                        if(road.startY - road.endY > 0){
+                            dirNS = 5;
+                        }
+                        else{
+                            dirNS = 1;
+                        }
+                        Road compare;
+                        if(inter.inRoads.get(0) == road && inter.inRoads.size() > 1){
+                            compare = inter.inRoads.get(1);
+                        }
+                        else{
+                            compare = inter.inRoads.get(0);
+                        }
+                        double m1 = ((road.startY - road.endY)/(road.startX - road.endX) + .00000001);
+                        double m2 = ((compare.startY - compare.endY)/(compare.startX - compare.endX) + .00000001);
+                        double angle = Math.abs(Math.toDegrees(Math.atan(((m1)-(m2)))/(1+(m1)*(m2))));
+                        //System.out.println(road.id + " " + compare.id + " " + angle + " " + dirNS + " " + dirEW + " " + compare.federalDirection);
+                        if(angle > 130 && angle < 230){
+                            if(Math.floorMod(compare.federalDirection - dirEW, 8) == 4){
+                                road.federalDirection = dirEW;
+                            }
+                            else if(Math.floorMod(compare.federalDirection - dirNS, 8) == 4){
+                                road.federalDirection = dirNS;
+                            }
+                        }
+                        else{
+                            if(Math.abs(compare.federalDirection - dirEW%8) == 2){
+                                road.federalDirection = dirEW;
+                            }
+                            else if(Math.abs(compare.federalDirection - dirNS%8) == 2){
+                                road.federalDirection = dirNS;
+                            }
+                        }
+                        //System.out.println(road.federalDirection);
+                    }
+                }
+            }
         }
-        
+        Road.addLanes();
+    }
+    
+    public static String writeToFile(){
+        try{
+            String location = "E:\\Java\\Traffic sim\\roads.txt";
+            FileWriter roadWriter = new FileWriter(location);
+            roadWriter.write(Instant.now() + "\n //Intersections \n");
+            for(Intersection inter : Intersection.intersections){
+                roadWriter.write(inter.vertex.x + "," + 
+                                 inter.vertex.y + "," + 
+                                 inter.signal + "\n");
+            }
+            roadWriter.write("//Roads \n");
+            for(Road road : Road.roads){
+                roadWriter.write(road.id + "," +
+                                 road.startX + "," +
+                                 road.startY + "," +
+                                 road.endX + "," +
+                                 road.endY + "," + 
+                                 road.speedLimit + "," +
+                                 road.federalDirection + "," +
+                                 road.length + "," +
+                                 road.AADT + "," +
+                                 road.numLanes + "," +
+                                 road.turnLanes + "\n");
+            }
+            roadWriter.close();
+            return location;
+        }
+        catch(Exception e){
+            return "Error!";
+        }
     }
     
     public static void tick(){
@@ -418,14 +564,14 @@ public class TrafficSim{
     
     public static double gcDist(double lon1, double lat1, double lon2, double lat2){
         double r = 6371e3;
-        double φ1 = lat1 * Math.PI/180;
-        double φ2 = lat2 * Math.PI/180;
-        double Δφ = (lat2 - lat1) * Math.PI/180;
-        double Δλ = (lon2 - lon1) * Math.PI/180;
+        double p1 = lat1 * Math.PI/180;
+        double p2 = lat2 * Math.PI/180;
+        double dp = (lat2 - lat1) * Math.PI/180;
+        double dl = (lon2 - lon1) * Math.PI/180;
         
-        double a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                   Math.cos(φ1) * Math.cos(φ2) *
-                   Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        double a = Math.sin(dp/2) * Math.sin(dp/2) +
+                   Math.cos(p1) * Math.cos(p2) *
+                   Math.sin(dl/2) * Math.sin(dl/2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         //System.out.println(lon1 + " " + lat1 + " " + lon2 + " " + lat2);
         //System.out.println(r * c);
@@ -436,5 +582,41 @@ public class TrafficSim{
         return Math.abs((end.x - start.x)*(start.y - point.y) - (start.x - point.x)*(end.y - start.y))/
         Math.sqrt(Math.pow((end.x - start.x),2) + Math.pow((end.y - start.y),2));
     }
+
+    public static String saveDelay(){
+        try{
+            String location = "E:\\Java\\Traffic sim\\delay.txt";
+            FileWriter roadWriter = new FileWriter(location);
+            roadWriter.write(Instant.now() + "\n //Intersections \n");
+            for(Intersection inter : Intersection.intersections){
+                roadWriter.write(inter.vertex.x + "," + 
+                                 inter.vertex.y + "," + 
+                                 inter.signal + "\n");
+            }
+            roadWriter.write("//Roads \n");
+            for(Road road : Road.roads){
+                roadWriter.write(road.id + "," +
+                                 road.startX + "," +
+                                 road.startY + "," +
+                                 road.endX + "," +
+                                 road.endY + "," + 
+                                 road.speedLimit + "," +
+                                 road.federalDirection + "," +
+                                 road.length + "," +
+                                 road.AADT + "," +
+                                 road.numLanes + "," +
+                                 road.turnLanes + "," + 
+                                 road.totalDelay + "\n");
+            }
+            roadWriter.close();
+            return location;
+        }
+        catch(Exception e){
+            return "Error!";
+        }
+    }
+
 }
+
+
     

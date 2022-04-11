@@ -1,5 +1,5 @@
 #BlueJ class context
 comment0.target=TrafficHelper
-comment1.params=shape\ AADT\ fedDir
-comment1.target=TrafficHelper(java.awt.Shape,\ int,\ int)
+comment1.params=shape\ AADT\ fedDir\ oneway
+comment1.target=TrafficHelper(java.awt.Shape,\ int,\ int,\ boolean)
 numComments=2

@@ -48,7 +48,13 @@ public class Road{
     }
     
     public void addVehicleToLane(Vehicle vehicle, int laneNum){ //0 is left most lane
+        try{
         this.lanes.get(laneNum).vehicles.add(vehicle);
+        }
+        catch(Exception e){
+            System.out.println(vehicle.toTurn + " " + vehicle.currRoad.id);
+        }
+        vehicle.laneNum = laneNum;
         this.lanes.get(laneNum).checkNeighbor();
     }
     
@@ -59,22 +65,24 @@ public class Road{
     
     public static void addToIntersection(Intersection intersection){
         for(Road road : roads){
-            if(Math.abs(road.startX - intersection.vertex.x) < 0.00000001 && Math.abs(road.startY - intersection.vertex.y) < 0.00000001){
+            if(Math.abs(road.startX - intersection.vertex.x) < 0.000001 && Math.abs(road.startY - intersection.vertex.y) < 0.000001){
                 intersection.outRoads.add(road);
             }
-            else if(Math.abs(road.endX - intersection.vertex.x) < 0.00000001 && Math.abs(road.endY - intersection.vertex.y) < 0.00000001){
+            else if(Math.abs(road.endX - intersection.vertex.x) < 0.000001 && Math.abs(road.endY - intersection.vertex.y) < 0.000001){
                 intersection.inRoads.add(road);
             }
         }
     }
     
     public static void addLanes(){ // should probably check to make sure turns are legal, i.e. not turning onto a one-way street; Might not be needed if cars check instead
+    
         for(Road road: roads){
             int i = 0;
             int j = 0;
             String curLane;
-            
-            if(road.turnLanes.length() == 0){
+
+            if(road.turnLanes.equals("none")){
+                
                 for(i = 0; i < road.numLanes; ++i){
                     road.lanes.add(new Lane(false, true, false));
                 }
@@ -89,13 +97,14 @@ public class Road{
                 while(j < road.numLanes){
                     try{
                         curLane = road.turnLanes.substring(i, road.turnLanes.indexOf("|", i));
+                        
                         i = i + curLane.length() + 1;
                     }
                     catch(Exception e){
                         curLane = road.turnLanes.substring(i, road.turnLanes.length());
                         i = i + curLane.length() - 1;
                     }
-                    //System.out.println(curLane);
+
                     if(curLane.contains("left") || curLane.contains("none") || (curLane.equals("") && j == 0)){
                         road.lanes.get(j).left = true;
                     }
@@ -109,16 +118,21 @@ public class Road{
                     ++j;
                 }
             }
-            /*System.out.println(road.id);
+            /*
+            System.out.println(road.id);
             for(i = 0; i < road.numLanes; ++i){
                 System.out.println(road.lanes.get(i).left + " " + road.lanes.get(i).through + " " + road.lanes.get(i).right);
-            }*/
+            }
+            */
         }
+        
     }
     
     public void newVehicle(){ //should eventually pick from different types i.e. cars, motorcycle, trucks
         Road destRoad;
+        boolean possible;
         do{
+            possible = false;
             int i = this.intersection.outRoads.size();
             if(i == 0){
                 destRoad = this;
@@ -126,29 +140,61 @@ public class Road{
             }
             else{
                 destRoad = this.intersection.outRoads.get(rand.nextInt(i));
+                /*
                 if((Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4) && i == 1){
                     destRoad = this;
                     break;
                 }
+                */
+                for(Road road : this.intersection.outRoads){
+                    if((Math.floorMod(this.federalDirection - road.federalDirection, 8) != 4)){
+                        possible = true;
+                    }
+                    
+                }
+
             }
-        }while(Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4);
-        new Vehicle(Integer.toString(numCars), //name
-                    rand.nextInt(10) + 10, //size
-                    this.speedLimit, //speed
-                    0, //accel
-                    0, //position
-                    this, //curRoad
-                    destRoad, //destination, can select itself, bunch of cars get stuck
-                    rand.nextInt(this.numLanes)//lane
-                    );
-        numCars++;
+        }while(possible && Math.floorMod(this.federalDirection - destRoad.federalDirection, 8) == 4);
+        int laneNum = rand.nextInt(this.numLanes);
+        if(this.lanes.get(laneNum).vehicles.size() == 0 || this.lanes.get(laneNum).vehicles.get(this.lanes.get(laneNum).vehicles.size() - 1).position > 0.00284091){
+            new Vehicle(Integer.toString(numCars), //name
+                        rand.nextInt(10) + 10, //size
+                        this.speedLimit, //speed
+                        0, //accel
+                        0, //position
+                        this, //curRoad
+                        destRoad, //destination, can select itself
+                        laneNum//lane
+                        );
+            numCars++;
+        }
     }
     
     public static void printDelay(){
         for(Road road: roads){
-            System.out.println(road.id + " " + road.federalDirection + " had a delay of " + road.totalDelay + " seconds");
-            totalSystemDelay = totalSystemDelay + (int) road.totalDelay;
+            if(road.federalDirection != 0){
+                /*//this scares me
+                for(Lane lane : road.lanes){
+                    for(Vehicle vehicle : lane.vehicles){
+                        if(vehicle.delay > road.perfDelay){
+                            road.totalDelay = road.totalDelay + vehicle.delay - (int)(road.perfDelay);
+                        }
+                    }
+                }
+                //*/
+                System.out.print(road.id + " " + road.federalDirection + " had a delay of " + road.totalDelay + " seconds");
+                for(Lane lane : road.lanes){
+                    System.out.print(" " + lane.vehicles.size());
+                }
+                System.out.println("");
+                totalSystemDelay = totalSystemDelay + (int) road.totalDelay;
+            }
         }
         System.out.println("Total system delay " + totalSystemDelay + " for " + numCars + " vehicles!");
+        System.out.println("Approx. " + totalSystemDelay/numCars + " wasted seconds per car");
+    }
+    
+    public void addDirection(int dir){
+        this.federalDirection = dir;
     }
 }
