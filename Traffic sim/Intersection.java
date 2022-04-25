@@ -21,6 +21,12 @@ public class Intersection{
        this.vertex = vertex;
        intersections.add(this);
     }
+
+    public Intersection(Vertex vertex, String signal){
+        this.vertex = vertex;
+        this.signal = signal;
+        intersections.add(this);
+     }
     
     public void generatePattern(){
         for(i = 0; i < 4; ++i){ //0 north, 1 east, 2 south, 3 west

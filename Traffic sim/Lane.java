@@ -16,12 +16,21 @@ public class Lane{
       Vehicle neighbor = null;
       
       for(Vehicle vehicle : vehicles){
-          if(neighbor == null && vehicle.position != neighborless.position && vehicle.position - neighborless.position > 0){
-              neighbor = vehicle;
-            }
-          else if(vehicle.position - neighborless.position > 0 && vehicle.position - neighborless.position < neighbor.position - neighborless.position && vehicle.position - neighborless.position != 0){
-              neighbor = vehicle;
-            }
+        if(neighbor == null && vehicle.position != neighborless.position && (vehicle.position) - neighborless.position > 0){
+          neighbor = vehicle;
+        }
+        else if((vehicle.position) - neighborless.position > 0 && (vehicle.position) - neighborless.position < (neighbor.position) - neighborless.position && vehicle.position - neighborless.position != 0){
+          neighbor = vehicle;
+        }
+        
+        /*
+          
+            double pos = 1000000000;
+        if(vehicle != neighborless && vehicle.position - neighborless.position < pos){
+          neighbor = vehicle;
+          pos = vehicle.position;
+        }
+            */
       }
       
       /* should be faster, needs along with faster lane changing; but for some reason the two give weird results ¯\_(ツ)_/¯
@@ -32,6 +41,7 @@ public class Lane{
         neighbor = this.vehicles.get(this.vehicles.indexOf(neighborless) - 1);
       }
       */
+      //System.out.println(neighbor);
       return neighbor;
     }
     

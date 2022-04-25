@@ -58,17 +58,18 @@ public class Road{
         this.lanes.get(laneNum).checkNeighbor();
     }
     
-    public void removeVehicleToLane(Vehicle vehicle, int laneNum){ //0 is left most lane
-        this.lanes.get(laneNum).vehicles.remove(vehicle);
+    public void removeVehicleFromLane(Vehicle vehicle, int laneNum){ //0 is left most lane
+        
+        this.lanes.get(laneNum).vehicles.remove(this.lanes.get(laneNum).vehicles.indexOf(vehicle));
         this.lanes.get(laneNum).checkNeighbor();
     }
     
     public static void addToIntersection(Intersection intersection){
         for(Road road : roads){
-            if(Math.abs(road.startX - intersection.vertex.x) < 0.000001 && Math.abs(road.startY - intersection.vertex.y) < 0.000001){
+            if(Math.abs(road.startX - intersection.vertex.x) < 0.00002 && Math.abs(road.startY - intersection.vertex.y) < 0.00002){
                 intersection.outRoads.add(road);
             }
-            else if(Math.abs(road.endX - intersection.vertex.x) < 0.000001 && Math.abs(road.endY - intersection.vertex.y) < 0.000001){
+            else if(Math.abs(road.endX - intersection.vertex.x) < 0.00002 && Math.abs(road.endY - intersection.vertex.y) < 0.00002){
                 intersection.inRoads.add(road);
             }
         }
@@ -191,7 +192,8 @@ public class Road{
             }
         }
         System.out.println("Total system delay " + totalSystemDelay + " for " + numCars + " vehicles!");
-        System.out.println("Approx. " + totalSystemDelay/numCars + " wasted seconds per car");
+        System.out.println("Approx. " + (totalSystemDelay/60)/60 + " hours of delay");
+        //System.out.println("Approx. " + totalSystemDelay/numCars + " wasted seconds per car");
     }
     
     public void addDirection(int dir){

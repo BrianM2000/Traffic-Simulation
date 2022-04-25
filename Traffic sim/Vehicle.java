@@ -48,6 +48,7 @@ public class Vehicle{
             vehicle.move();
             if(vehicle.arrived){
                 toRemove.add(vehicle);
+                vehicle.currRoad.removeVehicleFromLane(vehicle, vehicle.laneNum);
                 //System.out.println("removing " + vehicle);
             }
         }
@@ -57,14 +58,14 @@ public class Vehicle{
     }
     
     public void move(){
-        ++delay;
+        ++this.delay;
         int toChange = this.rightLane();
         safe = true;
         if(toChange != 0){ 
             this.changeLane(toChange); 
         }
         this.accelerate();
-        if(this.speed/3600 < 0){
+        if(this.speed/3600 < 0.1/3600){
             this.speed = 0;
         }
         if((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3){
@@ -74,8 +75,8 @@ public class Vehicle{
             toDestination(toChange);
         }
         
-        if(type == "Car"){
-            //System.out.println(type + " " + this.speed + " mph " + position);
+        if(type == "testCar" || type == "testCar2"){
+            System.out.println(type + " " + this.speed + " mph " + position + " " + this.neighbor);
         }
         
         this.position = this.position + this.speed/3600;
@@ -87,19 +88,23 @@ public class Vehicle{
     }
     
     public void accelerate(){
-        
-        /*
-        if(this.type.equals("7")){
-            System.out.println(laneNum + " " + this.currRoad.id);
+
+        if(this.speed > this.currRoad.speedLimit){
+            this.accel = (this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit);
         }
-        */
 
         if(mustCheckNeighbor){//find neighbor
             neighbor = this.currRoad.lanes.get(laneNum).getNeighbor(this);
             mustCheckNeighbor = false;
         }
+
+        if(neighbor != null){//stay safe distance from neighbor; needs to check for cars in next lane 
+            toClose = (neighbor.position - neighbor.size) - position < (Math.abs(neighbor.speed - speed)/3600) * 3 || 
+                      (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
+        }
+
         
-        if(neighbor == null && neighborNextdoor != null && toLane != null){
+        if(neighbor == null && neighborNextdoor == null && toLane != null){
             double tempPos = this.destRoad.length;
             for(Vehicle vehicle : this.destRoad.lanes.get(toLane).vehicles){
                 if(vehicle.position < tempPos){
@@ -107,27 +112,27 @@ public class Vehicle{
                 }
                 neighborNextdoor = vehicle;
             }
-             if((neighborNextdoor.position - neighborNextdoor.size) - (position - this.currRoad.length) < (Math.abs(neighborNextdoor.speed - speed)/3600) * 3 || 
-             ((position - this.currRoad.length) + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighborNextdoor.position - neighborNextdoor.size - (position - this.currRoad.length) && speed >= 0){
-                this.accel = (neighborNextdoor.speed - this.speed)/(((neighborNextdoor.position - neighborNextdoor.size) - (position - this.currRoad.length)) * 50 + 1);
-             } 
+            
         }
 
-        if(neighbor != null){//stay safe distance from neighbor; needs to check for cars in next lane 
-            toClose = (neighbor.position - neighbor.size) - position < (Math.abs(neighbor.speed - speed)/3600) * 3 || 
-                      (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighbor.position - neighbor.size - position;
-        }
+        if(neighborNextdoor != null && (((this.currRoad.length - 0.00284091) < position) && (neighborNextdoor.position - neighborNextdoor.size) - (position - this.currRoad.length) < (Math.abs(neighborNextdoor.speed - speed)/3600) * 3 || 
+             ((position - this.currRoad.length) + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > neighborNextdoor.position - neighborNextdoor.size - (position - this.currRoad.length) && speed >= 0)){
+                this.accel = (neighborNextdoor.speed - (this.speed))/(((neighborNextdoor.position - (neighborNextdoor.size)) - (position - this.currRoad.length)) * 50 + 1);
+             } 
         
-        if(neighbor != null && toClose && speed >= 0){//slow down relative to neighbor
-            this.accel = (neighbor.speed - this.speed)/(((neighbor.position - neighbor.size) - position) * 50 + 1);
-        }
         
-        else if(((this.currRoad.length - 0.00284091) - position < (speed/3600) * 3 ||
+        else if((neighbor == null || neighbor.position > (this.currRoad.length - 0.00284091)) && (((this.currRoad.length - 0.00284091) - position < ((speed)/3600) * 3 ||
             (position + ((this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit))/3600) > this.currRoad.length - 0.00284091 - position) &&
-            this.currRoad.intersection != null && !this.canGoThroughLight()){//slowdown if not allowed to go through intersection
-            this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) * 50 + 1);
-            //System.out.println(type + " is " + (this.currRoad.length - position) + " miles away from intersection");
+            this.currRoad.intersection != null && !this.canGoThroughLight())){//slowdown if not allowed to go through intersection
+                this.accel = (-this.speed)/(((this.currRoad.length - 0.00284091) - position) + 1);
+                if((this.currRoad.length - 0.00284091 - position) < 0){
+                }
         }
+
+        else if(neighbor != null && toClose && speed >= 0){//slow down relative to neighbor
+            this.accel = (neighbor.speed - (this.speed))/(((neighbor.position - (neighbor.size)) - position) + 1);
+        }
+
         else if(!safe){//slow down if vehicle can't change lanes as desired
             this.accel = (this.currRoad.speedLimit/2 - this.speed)/Math.sqrt(this.currRoad.speedLimit/2) ;
         }
@@ -135,17 +140,7 @@ public class Vehicle{
         else{//accelerate towards speed limit
             this.accel = (this.currRoad.speedLimit - this.speed)/Math.sqrt(this.currRoad.speedLimit);
         }
-        /*
-        if(this.canGoThroughLight()){
-            System.out.println(type + " is going " + toTurn + " at light " + this.currRoad.intersection);
-        }
-        */
-        //System.out.println("accel " + this.accel);
-        /*
-        if(type == "Truck"){
-            accel = 0;
-        }
-        */
+        
         this.speed = Math.ceil((this.speed + this.accel)*1000.0)/1000.0;
     }
     
@@ -154,15 +149,24 @@ public class Vehicle{
         if(this.currRoad == this.destRoad){
             arrived = true;
         }
+        this.neighbor = null;
         this.mustCheckNeighbor = true;
+        if(this.delay - (int) this.currRoad.perfDelay < 0){
+            this.delay = (int) this.currRoad.perfDelay;
+        }
+
+        //System.out.println(this.speed);
+        //System.out.println((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn)));
+        
         this.currRoad.totalDelay = this.currRoad.totalDelay + ((this.delay) - (int) this.currRoad.perfDelay);
-        this.currRoad.removeVehicleToLane(this, laneNum);
+        this.currRoad.removeVehicleFromLane(this, laneNum);
         this.position = this.position - this.currRoad.length;
-            
+        //System.out.println(this.currRoad.id);
         this.currRoad = this.destRoad;
         this.currRoad.addVehicleToLane(this, toLane);
+        laneNum = toLane;
         toLane = null;
-            
+        
         //System.out.println(this.type + " moving to " + this.currRoad + " to lane " + this.laneNum);
             
         this.destRoad = this.currRoad; //should eventaully be this.destRoad = this.getNextDest();
@@ -231,8 +235,8 @@ public class Vehicle{
         else{
             correctLane = false;
         }
-        return ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane) ||
-        ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2)&& correctLane && this.canGoThruYellow());
+        return ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane)
+        || ((this.currRoad.intersection.pattern.get(this.currRoad.federalDirection/2).getTurn(toTurn) == 2) && correctLane && this.canGoThruYellow());
     }
     
     public void changeLane(int toChange){// need to make vehicles spread out, rn they just stop at the first acceptable lane
@@ -244,6 +248,7 @@ public class Vehicle{
         try{//gotta check to make sure no ones in the way
             double distBehind = 0;
             double distInfront = 0;
+            //System.out.println(this.currRoad.id + " " + this.destRoad.id);
             for(Vehicle vehicle : this.currRoad.lanes.get(laneNum + toChange).vehicles){
                 if(this.position - vehicle.position > 0 && this.position - vehicle.position > distBehind){
                     behind = vehicle;
@@ -300,9 +305,11 @@ public class Vehicle{
                 catch(Exception e){}
                 this.neighbor = infront;
                 */
-                currRoad.removeVehicleToLane(this, laneNum);
+                currRoad.removeVehicleFromLane(this, laneNum);
                 laneNum = laneNum + toChange;
                 currRoad.addVehicleToLane(this, laneNum);
+                //this.neighbor = close;
+
             }
         }
         catch(Exception e){

@@ -65,22 +65,16 @@ public class DelayMap extends Canvas{
             endX = (int)Math.round((road.endX - zeroX) * 40000) + 400;
             endY = (int)-Math.round((road.endY - zeroY) * 40000);
 
-            if(road.totalDelay == 0){
+            
+            if(road.totalDelay <= 0){
                 g.setColor(Color.green);
             }
             else{
-                int delayColor = (int)road.totalDelay;
-                if(road.totalDelay < 0){
-                    delayColor = 0;
-                }
-                else{
-                    delayColor = (int)(255 - (road.totalDelay/maxDelay * 255));
-                    if(delayColor > 200){
-                        delayColor = 200;
-                    }
-                }
+                int delayColor = (int)((255-50) - (Math.log(road.totalDelay)/Math.log(maxDelay) * (255-50)));
+                
                 g.setColor(new Color(255, delayColor, delayColor));
             }
+        
             if(road.federalDirection == 0){
                 g.setColor(Color.blue);
             }
@@ -90,7 +84,7 @@ public class DelayMap extends Canvas{
         g.setColor(Color.black);
 
         for(Intersection inter : Intersection.intersections){
-            if(!inter.signal.equals("0") && !inter.signal.equals("1") && inter.inRoads.size() > 0){
+            if(!inter.signal.equals("0") && !inter.signal.equals("1") && inter.inRoads.size() > 0){ //&& inter.inRoads.size() > 0
                 int x, y;
                 x = (int)Math.round((inter.vertex.x - zeroX) * 40000) + 400;
                 y = (int)-Math.round((inter.vertex.y - zeroY) * 40000);
