@@ -1,9 +1,0 @@
-#BlueJ class context
-comment0.target=Lane
-comment1.params=left\ through\ right
-comment1.target=Lane(boolean,\ boolean,\ boolean)
-comment2.params=position
-comment2.target=Vehicle\ getNeighbor(double)
-comment3.params=
-comment3.target=void\ checkNeighbor()
-numComments=4
