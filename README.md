@@ -1,5 +1,3 @@
-v# Traffic-Simulation
+Sneior Thesis
 
-ExcelReader reads excel files
-  Excel files derived from New York state Traffic viewer and Openstreet map's online database https://overpass-turbo.eu/
-  
+Simulates Traffic give input from NYSDOT Average Annual Daily Traffic Viewer and Street information from OpenStreetMap.com
